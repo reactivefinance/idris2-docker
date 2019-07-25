@@ -1,0 +1,8 @@
+#!/bin/sh
+. ./variables.sh
+docker build --build-arg VERSION=$VERSION --build-arg CHEZ_SCHEME_VERSION=$CHEZ_SCHEME_VERSION --build-arg VCS_REF=`git rev-parse --short HEAD` \
+  --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+  --build-arg GIT_COMMIT=$(git log -1 --format=%h) \
+  -t ${NAME}:${TAG} -t ${NAME}:latest .
+docker push ${NAME}:${TAG}
+docker push ${NAME}:latest

@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: build-bot
+secrets:
+  - name: basic-user-pass
+
+---
+
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: src-git
+spec:
+  type: git
+  params:
+    - name: revision
+      value: master
+    - name: url
+      value: https://git.haenerconsulting.com/docker/idris2.git
+
+---
+
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: docker-image
+spec:
+  type: image
+  params:
+    - name: url
+      value: docker.haenerconsulting.com/idris2
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kaniko-workspace-pvc
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+  #selector:
+  #  matchLabels:
+  #    data: kaniko-pv
+
+---
+
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: kaniko-build-push
+spec:
+  inputs:
+    resources:
+      - name: docker-source
+        type: git
+    params:
+      - name: pathToDockerFile
+        description: The path to the dockerfile to build
+        default: /workspace/Dockerfile
+      - name: pathToContext
+        description:
+          The build context used by Kaniko
+          (https://github.com/GoogleContainerTools/kaniko#kaniko-build-contexts)
+        default: /workspace
+      - name: version
+        description:
+          The version of the image
+        default: latest
+      - name: idrisVersion
+        description:
+          The version of Idris
+        default: "2.0"
+      - name: chezSchemeVersion
+        description:
+          The version of the Chez Scheme
+        default: latest
+  outputs:
+    resources:
+      - name: builtImage
+        type: image
+  steps:
+    - name: ls
+      image: alpine
+      command:
+        - ls
+      args:
+        - -R
+        - -l
+        - /workspace 
+    - name: mount
+      image: alpine
+      command:
+        - mount
+
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:latest
+      command:
+        - /kaniko/executor
+      args:
+        - --dockerfile=${inputs.params.pathToDockerFile}
+        - --destination=${outputs.resources.builtImage.url}
+        - --context=${inputs.params.pathToContext}
+        - --build-arg=VERSION=${inputs.params.version}
+        - --build-arg=IDRIS_VERSION=${inputs.params.idrisVersion}
+        - --build-arg=CHEZ_SCHEME_VERSION=${inputs.params.chezSchemeVersion}
+ 
+#      volumeMounts:
+#      - name: kaniko-workspace
+#        mountPath: /workspace/docker-source
+#  volumes:
+#  - name: kaniko-workspace
+#    persistentVolumeClaim:
+#      claimName: kaniko-workspace-pvc
+
+---
+
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: kaniko
+spec:
+  resources:
+    - name: src
+      type: git
+    - name: docker-image
+      type: image
+  tasks:
+  - name: docker-image
+    taskRef:
+      name: kaniko-build-push
+    params:
+      - name: pathToContext
+        value: idris2
+    resources:
+      inputs:
+        - name: src
+          resource: src
+      outputs:
+        - name: builtImage
+          resource: docker-image
+
+---
+

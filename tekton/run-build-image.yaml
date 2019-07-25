@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  name: kaniko-build-push-task-run
+spec:
+  taskRef:
+    name: kaniko-build-push
+  serviceAccount: build-bot
+  inputs:
+    resources:
+      - name: docker-source
+        resourceRef:
+          name: src-git
+    params:
+      - name: pathToDockerFile
+        value: /workspace/docker-source/Dockerfile
+      - name: pathToContext
+        value: /workspace/docker-source/
+      - name: version
+        value: "0.0.1"
+      - name: idrisVersion
+        value: "2.0-alpha"
+      - name: chezSchemeVersion
+        value: "v9.5.2"
+  outputs:
+    resources:
+      - name: builtImage
+        resourceRef:
+          name: docker-image
