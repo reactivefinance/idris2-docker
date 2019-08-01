@@ -40,7 +40,9 @@ RUN apk add --no-cache \
   zlib \
   musl-dev \
   gmp-dev \
-  gcc
+  gcc \
+  libuuid
+
 COPY --from=builder /usr/local /usr/local
 VOLUME /home/idris
 WORKDIR /home/idris
