@@ -19,7 +19,9 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
 #RUN ./configure --installprefix=$PREFIX --threads --disable-x11 && make install
 RUN ./configure --threads --disable-x11 && make install
 WORKDIR /usr/src/Idris2
-RUN make install
+#RUN make install
+# Chez Scheme tests fail - we therefore replace make install by the following
+RUN make idris2 libs install-exec install-libs
 
 FROM alpine:latest
 ARG BUILD_DATE
@@ -27,7 +29,7 @@ ARG VCS_REF
 ARG GIT_COMMIT=unspecified
 LABEL org.label-schema.version=$VERSION
 LABEL org.label-schema.vcs-ref=$VCS_REF
-LABEL org.label-schema.vcs-url=sshttps://github.com/reactivefinance/idris2-docker
+LABEL org.label-schema.vcs-url=https://github.com/reactivefinance/idris2-docker
 LABEL org.label-schema.build-date=$BUILD_DATE
 LABEL git_commit=$GIT_COMMIT
 LABEL maintainer="Patrick Haener <contact@haenerconsulting.com>"
