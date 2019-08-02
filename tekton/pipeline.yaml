@@ -110,7 +110,10 @@ spec:
         - --build-arg=VERSION=${inputs.params.version}
         - --build-arg=IDRIS_VERSION=${inputs.params.idrisVersion}
         - --build-arg=CHEZ_SCHEME_VERSION=${inputs.params.chezSchemeVersion}
- 
+      resources:
+        requests:
+          memory: 12Gi
+
 #      volumeMounts:
 #      - name: kaniko-workspace
 #        mountPath: /workspace/docker-source

@@ -1,4 +1,2 @@
 secret.yaml
-build/
-*.ttc
-*.ttm
+build/*

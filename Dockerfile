@@ -13,14 +13,13 @@ RUN mkdir -p /usr/src
 WORKDIR /usr/src
 RUN git clone https://github.com/cisco/ChezScheme.git --branch $CHEZ_SCHEME_VERSION
 RUN git clone https://github.com/edwinb/Idris2.git
-ENV PREFIX /usr/local
+#ENV PREFIX /usr/local
 WORKDIR /usr/src/ChezScheme
 RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
-RUN ./configure --installprefix=$PREFIX --threads --disable-x11 && make install
+#RUN ./configure --installprefix=$PREFIX --threads --disable-x11 && make install
+RUN ./configure -threads --disable-x11 && make install
 WORKDIR /usr/src/Idris2
-#RUN make install
-# Chez Scheme tests fail - we therefore replace make install by the following
-RUN make idris2 libs install-exec install-libs
+RUN make install
 
 FROM alpine:latest
 ARG BUILD_DATE
@@ -46,4 +45,5 @@ RUN apk add --no-cache \
 COPY --from=builder /usr/local /usr/local
 VOLUME /home/idris
 WORKDIR /home/idris
-CMD ["/usr/local/bin/idris2"]
+ENV PATH ${PATH}:/root/.idris2/bin
+CMD ["/root/.idris2/bin/idris2"]
