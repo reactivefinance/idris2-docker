@@ -17,7 +17,7 @@ RUN git clone https://github.com/edwinb/Idris2.git
 WORKDIR /usr/src/ChezScheme
 RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
 #RUN ./configure --installprefix=$PREFIX --threads --disable-x11 && make install
-RUN ./configure -threads --disable-x11 && make install
+RUN ./configure --threads --disable-x11 && make install
 WORKDIR /usr/src/Idris2
 RUN make install
 
