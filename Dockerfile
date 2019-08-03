@@ -13,12 +13,13 @@ RUN mkdir -p /usr/src
 WORKDIR /usr/src
 RUN git clone https://github.com/cisco/ChezScheme.git --branch $CHEZ_SCHEME_VERSION
 RUN git clone https://github.com/edwinb/Idris2.git
-#ENV PREFIX /usr/local
+ENV PREFIX /usr/local
 WORKDIR /usr/src/ChezScheme
 RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
-#RUN ./configure --installprefix=$PREFIX --threads --disable-x11 && make install
-RUN ./configure --threads --disable-x11 && make install
+RUN ./configure --installprefix=$PREFIX --threads --disable-x11 && make install
 WORKDIR /usr/src/Idris2
+# Hack: the network library has ${HOME}/.idris2 hard-coded instead of using PREFIX
+RUN mkdir -p ${HOME}/.idris2/idris2/network/lib
 #RUN make install
 # Chez Scheme tests fail - we therefore replace make install by the following
 RUN make idris2 libs install-exec install-libs
@@ -47,5 +48,4 @@ RUN apk add --no-cache \
 COPY --from=builder /usr/local /usr/local
 VOLUME /home/idris
 WORKDIR /home/idris
-ENV PATH ${PATH}:/root/.idris2/bin
-CMD ["/root/.idris2/bin/idris2"]
+CMD ["/usr/local/bin/idris2"]
